@@ -53,8 +53,6 @@ def on_message(client, userdata, msg):
             angle_1 = angle_2 = angle_3 = angle_4 = angle_5 = angle_6 = 90
 
             while 1:
-                payload = msg.payload.decode()
-                gamepad_data = json.loads(payload)
                 
             
                 axis_0 = gamepad_data["axis_0"]
