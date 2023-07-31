@@ -1,20 +1,20 @@
 import paho.mqtt.client as mqtt
-import ipywidgets.widgets as widgets
 import threading
 import json
 import time
-import inspect
-import ctypes
+import cv2
 from Arm_Lib import Arm_Device
-from IPython.display import display
 
 # 게임패드 데이터를 저장할 변수 선언
 gamepad_data = None
 
 def on_connect(client, userdata, flags, rc):
     print("연결 성공, 결과 코드: " + str(rc))
-    # 라즈베리 파이가 게임패드 데이터를 발행하는 주제(topic)를 구독
+    # 게임패드 데이터를 topic 구독
     client.subscribe("my/topic")
+    # 게임패드 데이터를 topic 구독
+    client.subscribe("jetson/camera")
+
 
 def on_message(client, userdata, msg):
     global gamepad_data
@@ -26,6 +26,9 @@ def on_message(client, userdata, msg):
     except json.JSONDecodeError as e:
         print(f"JSON decode error: {e}")
 
+def publish_camera_data(client, camera_data):
+    client.publish("jetson/camera", camera_data, qos = 1)
+
 def Arm_Handle():
     # MQTT 클라이언트 설정
     client = mqtt.Client()
@@ -33,6 +36,18 @@ def Arm_Handle():
     client.on_connect = on_connect
     client.on_message = on_message
     client.loop_forever()
+
+    image = cv2.VideoCapture(0)
+    try:
+        while True:
+            ret, frame = image.read()
+            if ret:
+                _, buffer = cv2.imencode('.jpg', frame)
+                publish_camera_data(client, buffer.tobytes())
+    except KeyboardInterrupt:
+        print("Program closed!")
+        pass
+    
 
 Arm = Arm_Device()
 thread2 = threading.Thread(target=Arm_Handle)
