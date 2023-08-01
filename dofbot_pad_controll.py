@@ -3,6 +3,7 @@ import threading
 import json
 import time
 import cv2
+import base64
 from Arm_Lib import Arm_Device
 
 # 게임패드 데이터를 저장할 변수 선언
@@ -12,6 +13,9 @@ def on_connect(client, userdata, flags, rc):
     print("연결 성공, 결과 코드: " + str(rc))
     # 게임패드 데이터를 topic 구독
     client.subscribe("my/topic")
+
+def on_connect_socket(client, userdata, flags, rc):
+    print("socket 연결 성공, 결과 코드: " + str(rc))
     # 게임패드 데이터를 topic 구독
     client.subscribe("jetson/camera")
 
@@ -36,7 +40,8 @@ def handle_camera():
             ret, frame = image.read()
             if ret:
                 _, buffer = cv2.imencode('.jpg', frame)
-                publish_camera_data(client, buffer.tobytes())
+                jpg_base64 = base64.b64encode(buffer).decode()
+                publish_camera_data(client2, jpg_base64)
     except KeyboardInterrupt:
         print("카메라 처리 종료")
         image.release()
@@ -76,10 +81,14 @@ def handle_gamepad():
         time.sleep(0.05)
 
 # MQTT 클라이언트 설정
-client = mqtt.Client()
-client.connect("129.254.174.120", 1883, 60)
-client.on_connect = on_connect
-client.on_message = on_message
+client1 = mqtt.Client()
+client1.connect("129.254.174.120", 1883, 60)
+client1.on_connect = on_connect
+client1.on_message = on_message
+
+client2 = mqtt.Client()
+client2.connect("129.254.174.120", 9002, 60)
+client2.on_connect_socket = on_connect_socket
 
 # 두 개의 쓰레드 생성 및 실행
 camera_thread = threading.Thread(target=handle_camera)
