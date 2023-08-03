@@ -10,23 +10,19 @@ def on_connect(client, userdata, flags, rc):
 
 def on_message(client, userdata, msg):
     try:
-        print(msg.payload)
+        print("메시지 수신")
     except:
-        print("not decoding message.....")
+        print("메시지 디코딩 실패")
 
 def Camera_Handle():
     client = mqtt.Client(transport="websockets")
     client.connect("129.254.174.120", 9002, 60)
-    print("connected")
+    print("연결 성공")
     client.on_connect = on_connect
     client.on_message = on_message
-    print("message arrived")
-    client.loop_forever()
+    client.loop_start()  # loop_forever() 대신 loop_start()로 변경
 
-    camera(client)
-
-camera_thread = threading.Thread(target=Camera_Handle)
-camera_thread.start()
+    camera(client)  # 카메라 처리 시작
 
 def camera(client):
     image = cv2.VideoCapture(0)
@@ -39,3 +35,6 @@ def camera(client):
     except KeyboardInterrupt:
         print("카메라 처리 종료")
         image.release()
+
+camera_thread = threading.Thread(target=Camera_Handle)
+camera_thread.start()
