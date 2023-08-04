@@ -1,40 +1,46 @@
 import paho.mqtt.client as mqtt
 import threading
+import base64
+import time
 import cv2
-import json
-from Arm_Lib import Arm_Device
+
+client = mqtt.Client(transport="websockets")
 
 def on_connect(client, userdata, flags, rc):
-    print("연결 성공, 결과 코드: " + str(rc))
+    print("connect success")
     client.subscribe("my/topic")
 
-def on_message(client, userdata, msg):
-    try:
-        print("메시지 수신")
-    except:
-        print("메시지 디코딩 실패")
-
 def Camera_Handle():
-    client = mqtt.Client(transport="websockets")
     client.connect("129.254.174.120", 9002, 60)
-    print("연결 성공")
     client.on_connect = on_connect
-    client.on_message = on_message
+    
     client.loop_start()  # loop_forever() 대신 loop_start()로 변경
 
-    camera(client)  # 카메라 처리 시작
+    
 
 def camera(client):
     image = cv2.VideoCapture(0)
+    image.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
+    image.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
     try:
+        
         while True:
+            start = time.time()
             ret, frame = image.read()
             if ret:
                 _, buffer = cv2.imencode('.jpg', frame)
-                client.publish("my/topic", buffer.tobytes(), qos=1)
+                jpg_base64 = base64.b64encode(buffer).decode()
+                client.publish("my/topic", jpg_base64, qos=0)
+                end = time.time()
+                t = end - start
+                fps = 1/t
+                print(fps)
+                
     except KeyboardInterrupt:
         print("카메라 처리 종료")
         image.release()
 
 camera_thread = threading.Thread(target=Camera_Handle)
 camera_thread.start()
+
+camera(client)
