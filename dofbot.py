@@ -260,8 +260,19 @@ gamepad_thread.start()
 camera_thread = threading.Thread(target=Camera_Handle)
 camera_thread.start()
 
+
+try_reconnect(client1)
 try_reconnect(client2)
 
+if __name__ == "__main__":
+    t1 = threading.Thread(target=Arm_Handle)
+    t2 = threading.Thread(target=Camera_Handle)
+
+    t1.start()
+    t2.start()
+
+    t1.join()
+    t2.join()
 
 
 
