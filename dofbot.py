@@ -107,7 +107,7 @@ def arm():
                     elif angle_2 < 0:
                         angle_2 = 0
                     Arm.Arm_serial_servo_write(2, angle_2, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
 
                 # No.1 servo, A0 Left-negative Right-positive
                 if axis_0 <= 0.1 and axis_0 >= -0.1:
@@ -123,7 +123,7 @@ def arm():
                     elif angle_1 < 0:
                         angle_1 = 0
                     Arm.Arm_serial_servo_write(1, angle_1, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
 
                 # No.6 servo, NUM1=B0,NUM3=B2, A2 Up-negative Down-positive
                 if button_0:
@@ -133,7 +133,7 @@ def arm():
                     elif angle_6 < 0:
                         angle_6 = 0
                     Arm.Arm_serial_servo_write(6, angle_6, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
                 elif button_2:
                     angle_6 -= s_step
                     if angle_6 > 180:
@@ -141,7 +141,7 @@ def arm():
                     elif angle_6 < 0:
                         angle_6 = 0
                     Arm.Arm_serial_servo_write(6, angle_6, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
                 elif axis_2 > 0.5:
                     angle_6 -= s_step
                     if angle_6 > 180:
@@ -149,7 +149,7 @@ def arm():
                     elif angle_6 < 0:
                         angle_6 = 0
                     Arm.Arm_serial_servo_write(6, angle_6, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
                 elif axis_2 < -0.5:
                     angle_6 += s_step
                     if angle_6 > 180:
@@ -157,7 +157,7 @@ def arm():
                     elif angle_6 < 0:
                         angle_6 = 0
                     Arm.Arm_serial_servo_write(6, angle_6, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
 
                 # No.5, NUM2=B1,NUM4=B3, A5Left-negative Right-positive
                 if button_1:
@@ -167,7 +167,7 @@ def arm():
                     elif angle_5 < 0:
                         angle_5 = 0
                     Arm.Arm_serial_servo_write(5, angle_5, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
                 elif button_3:
                     angle_5 -= s_step
                     if angle_5 > 180:
@@ -175,7 +175,7 @@ def arm():
                     elif angle_5 < 0:
                         angle_5 = 0
                     Arm.Arm_serial_servo_write(5, angle_5, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
                 elif axis_5 > 0.5:
                     angle_5 += s_step
                     if angle_5 > 180:
@@ -183,7 +183,7 @@ def arm():
                     elif angle_5 < 0:
                         angle_5 = 0
                     Arm.Arm_serial_servo_write(5, angle_5, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
                 elif axis_5 < -0.5:
                     angle_5 -= s_step
                     if angle_5 > 180:
@@ -191,7 +191,7 @@ def arm():
                     elif angle_5 < 0:
                         angle_5 = 0
                     Arm.Arm_serial_servo_write(5, angle_5, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
 
                 # NO.4 servo，R1=B5,R2=B7
                 if button_5:
@@ -201,7 +201,7 @@ def arm():
                     elif angle_4 < 0:
                         angle_4 = 0
                     Arm.Arm_serial_servo_write(4, angle_4, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
                 elif button_7:
                     angle_4 += s_step
                     if angle_4 > 180:
@@ -209,7 +209,7 @@ def arm():
                     elif angle_4 < 0:
                         angle_4 = 0
                     Arm.Arm_serial_servo_write(4, angle_4, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
 
                 # NO.3 servo，L1=B4,L2=B6
                 if button_4:
@@ -219,7 +219,7 @@ def arm():
                     elif angle_3 < 0:
                         angle_3 = 0
                     Arm.Arm_serial_servo_write(3, angle_3, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
                 elif button_6:
                     angle_3 += s_step
                     if angle_3 > 180:
@@ -227,7 +227,7 @@ def arm():
                     elif angle_3 < 0:
                         angle_3 = 0
                     Arm.Arm_serial_servo_write(3, angle_3, s_time)
-                    time.sleep(0.01)
+                    time.sleep(0.1)
 
                 # Press the key B8 to set all servos of DOFBOT to 90 degrees
                 if button_8:
