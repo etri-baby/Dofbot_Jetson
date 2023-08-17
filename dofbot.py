@@ -16,12 +16,12 @@ def on_connect(client1, userdata, flags, rc):
     print("연결 성공, 결과 코드: " + str(rc))
     # 게임패드 데이터를 topic 구독
     client1.subscribe("my/topic")
-    client1.subscribe("jetson/read")
 
 def on_connect_socket(client2, userdata, flags, rc):
     if(rc == 0):
         print("Connected to MQTT broker")
         client2.subscribe("jetson/camera")
+        client2.subscribe("jetson/read")
     else:
         print("Failed to connect, code: ", rc)
 
@@ -43,7 +43,6 @@ def Arm_Handle():
         try_reconnect(client1)
     else:
         client1.on_message = on_message
-        read_arm(client1)
     
     client1.loop_start()
 
@@ -54,6 +53,7 @@ def Camera_Handle():
         try_reconnect(client2)
     else:
         camera(client2)
+        
     
     client2.loop_start()  # loop_forever()
 
@@ -62,8 +62,15 @@ def camera(client2):
     image.set(cv2.CAP_PROP_FRAME_WIDTH, 320)
     image.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
     try:
-        
         while True:
+            arm_data = []
+
+            for i in range(6):
+                aa = Arm.Arm_serial_servo_read(i+1)
+                arm_data.append({i+1: str(aa)})
+
+            client2.publish("jetson/read", json.dumps(arm_data))
+
             ret, frame = image.read()
             if ret:
                 _, buffer = cv2.imencode('.jpg', frame)
@@ -244,13 +251,13 @@ def arm():
         # 임의의 시간 간격으로 반복 수행
         # time.sleep(0.05)
 
-def read_arm(client1):
+def read_arm(client2):
     while True:
-        for i in range(6):
-            aa = Arm.Arm_serial_servo_read(i+1)
-            client1.publish("jetson/read", aa)
-            time.sleep(.01)
-        time.sleep(2)
+        
+        
+            
+        client2.publish("jetson/read", json.dumps(arm_data))
+        time.sleep(.3)
 
 def try_reconnect(client):
     while not client.is_connected():
