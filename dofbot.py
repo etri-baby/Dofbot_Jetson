@@ -16,6 +16,7 @@ def on_connect(client1, userdata, flags, rc):
     print("연결 성공, 결과 코드: " + str(rc))
     # 게임패드 데이터를 topic 구독
     client1.subscribe("my/topic")
+    client1.subscribe("jetson/read")
 
 def on_connect_socket(client2, userdata, flags, rc):
     if(rc == 0):
@@ -38,16 +39,18 @@ def Arm_Handle():
     client1.connect("129.254.174.120", 1883, 60)
     client1.on_connect = on_connect
     
-    if(client1.on_connect_fail):
+    if not client1.is_connected:
         try_reconnect(client1)
     else:
         client1.on_message = on_message
-    client1.loop_forever()
+        read_arm(client1)
+    
+    client1.loop_start()
 
 def Camera_Handle():
     client2.connect("129.254.174.120", 9002, 60)
     client2.on_connect = on_connect_socket
-    if(client2.on_connect_fail):
+    if not client2.is_connected:
         try_reconnect(client2)
     else:
         camera(client2)
@@ -241,12 +244,20 @@ def arm():
         # 임의의 시간 간격으로 반복 수행
         # time.sleep(0.05)
 
-def try_reconnect(client2):
-    while not client2.is_connected():
+def read_arm(client1):
+    while True:
+        for i in range(6):
+            aa = Arm.Arm_serial_servo_read(i+1)
+            client1.publish("jetson/read", aa)
+            time.sleep(.01)
+        time.sleep(2)
+
+def try_reconnect(client):
+    while not client.is_connected():
         try:
             print("Trying to reconnect...")
-            client2.connect("129.254.174.120", 9002, 60)
-            client2.loop_start()
+            client.connect("129.254.174.120", 9002, 60)
+            time.sleep(3)
         except ConnectionError:
             print("Failed to reconnect. Retrying in 3 seconds...")
             time.sleep(3)
@@ -260,7 +271,3 @@ t1.start()
 t2.start()
 
 arm()
-
-try_reconnect(client1)
-try_reconnect(client2)
-
