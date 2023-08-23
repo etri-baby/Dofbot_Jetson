@@ -15,7 +15,7 @@ gamepad_data = None
 def on_connect(client1, userdata, flags, rc):
     print("연결 성공, 결과 코드: " + str(rc))
     # 게임패드 데이터를 topic 구독
-    client1.subscribe("my/topic")
+    client1.subscribe("jetson/pad")
 
 def on_connect_socket(client2, userdata, flags, rc):
     if(rc == 0):
@@ -23,6 +23,7 @@ def on_connect_socket(client2, userdata, flags, rc):
         client2.subscribe("jetson/camera")
         client2.subscribe("jetson/read")
     else:
+        try_reconnect_socket(client2)
         print("Failed to connect, code: ", rc)
 
 def on_message(client1, userdata, msg):
@@ -50,11 +51,10 @@ def Camera_Handle():
     client2.connect("129.254.174.120", 9002, 60)
     client2.on_connect = on_connect_socket
     if not client2.is_connected:
-        try_reconnect(client2)
+        try_reconnect_socket(client2)
     else:
         camera(client2)
         
-    
     client2.loop_start()  # loop_forever()
 
 def camera(client2):
@@ -63,6 +63,7 @@ def camera(client2):
     image.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
     try:
         while True:
+            start = time.time()
             arm_data = []
 
             for i in range(6):
@@ -76,6 +77,12 @@ def camera(client2):
                 _, buffer = cv2.imencode('.jpg', frame)
                 jpg_base64 = base64.b64encode(buffer).decode()
                 client2.publish("jetson/camera", jpg_base64, qos=0)
+                end = time.time()
+                t = end - start
+                fps = 1/t
+                print("stream fps: ", end ="")
+                print(fps)
+
                 
     except KeyboardInterrupt:
         print("카메라 처리 종료")
@@ -117,7 +124,7 @@ def arm():
                     elif angle_2 < 0:
                         angle_2 = 0
                     Arm.Arm_serial_servo_write(2, angle_2, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
 
                 # No.1 servo, A0 Left-negative Right-positive
                 if axis_0 <= 0.1 and axis_0 >= -0.1:
@@ -133,7 +140,7 @@ def arm():
                     elif angle_1 < 0:
                         angle_1 = 0
                     Arm.Arm_serial_servo_write(1, angle_1, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
 
                 # No.6 servo, NUM1=B0,NUM3=B2, A2 Up-negative Down-positive
                 if button_0:
@@ -143,7 +150,7 @@ def arm():
                     elif angle_6 < 0:
                         angle_6 = 0
                     Arm.Arm_serial_servo_write(6, angle_6, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                 elif button_2:
                     angle_6 -= s_step
                     if angle_6 > 180:
@@ -151,7 +158,7 @@ def arm():
                     elif angle_6 < 0:
                         angle_6 = 0
                     Arm.Arm_serial_servo_write(6, angle_6, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                 elif axis_2 > 0.5:
                     angle_6 -= s_step
                     if angle_6 > 180:
@@ -159,7 +166,7 @@ def arm():
                     elif angle_6 < 0:
                         angle_6 = 0
                     Arm.Arm_serial_servo_write(6, angle_6, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                 elif axis_2 < -0.5:
                     angle_6 += s_step
                     if angle_6 > 180:
@@ -167,7 +174,7 @@ def arm():
                     elif angle_6 < 0:
                         angle_6 = 0
                     Arm.Arm_serial_servo_write(6, angle_6, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
 
                 # No.5, NUM2=B1,NUM4=B3, A5Left-negative Right-positive
                 if button_1:
@@ -177,7 +184,7 @@ def arm():
                     elif angle_5 < 0:
                         angle_5 = 0
                     Arm.Arm_serial_servo_write(5, angle_5, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                 elif button_3:
                     angle_5 -= s_step
                     if angle_5 > 180:
@@ -185,7 +192,7 @@ def arm():
                     elif angle_5 < 0:
                         angle_5 = 0
                     Arm.Arm_serial_servo_write(5, angle_5, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                 elif axis_5 > 0.5:
                     angle_5 += s_step
                     if angle_5 > 180:
@@ -193,7 +200,7 @@ def arm():
                     elif angle_5 < 0:
                         angle_5 = 0
                     Arm.Arm_serial_servo_write(5, angle_5, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                 elif axis_5 < -0.5:
                     angle_5 -= s_step
                     if angle_5 > 180:
@@ -201,7 +208,7 @@ def arm():
                     elif angle_5 < 0:
                         angle_5 = 0
                     Arm.Arm_serial_servo_write(5, angle_5, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
 
                 # NO.4 servo，R1=B5,R2=B7
                 if button_5:
@@ -211,7 +218,7 @@ def arm():
                     elif angle_4 < 0:
                         angle_4 = 0
                     Arm.Arm_serial_servo_write(4, angle_4, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                 elif button_7:
                     angle_4 += s_step
                     if angle_4 > 180:
@@ -219,7 +226,7 @@ def arm():
                     elif angle_4 < 0:
                         angle_4 = 0
                     Arm.Arm_serial_servo_write(4, angle_4, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
 
                 # NO.3 servo，L1=B4,L2=B6
                 if button_4:
@@ -229,7 +236,7 @@ def arm():
                     elif angle_3 < 0:
                         angle_3 = 0
                     Arm.Arm_serial_servo_write(3, angle_3, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                 elif button_6:
                     angle_3 += s_step
                     if angle_3 > 180:
@@ -237,7 +244,7 @@ def arm():
                     elif angle_3 < 0:
                         angle_3 = 0
                     Arm.Arm_serial_servo_write(3, angle_3, s_time)
-                    time.sleep(0.1)
+                    time.sleep(0.05)
 
                 # Press the key B8 to set all servos of DOFBOT to 90 degrees
                 if button_8:
@@ -251,23 +258,26 @@ def arm():
         # 임의의 시간 간격으로 반복 수행
         # time.sleep(0.05)
 
-def read_arm(client2):
-    while True:
-        
-        
-            
-        client2.publish("jetson/read", json.dumps(arm_data))
-        time.sleep(.3)
-
 def try_reconnect(client):
     while not client.is_connected():
         try:
-            print("Trying to reconnect...")
+            print("Trying to mqtt socket reconnect...")
+            client.connect("129.254.174.120", 1883, 60)
+            time.sleep(3)
+        except ConnectionError:
+            print("Failed to reconnect. Retrying in 3 seconds...")
+            time.sleep(3)
+
+def try_reconnect_socket(client):
+    while not client.is_connected():
+        try:
+            print("Trying to mqtt reconnect...")
             client.connect("129.254.174.120", 9002, 60)
             time.sleep(3)
         except ConnectionError:
             print("Failed to reconnect. Retrying in 3 seconds...")
             time.sleep(3)
+
 
 Arm = Arm_Device()
 
