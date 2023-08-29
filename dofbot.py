@@ -6,6 +6,15 @@ import time
 import cv2
 from Arm_Lib import Arm_Device
 
+with open("config.json", "r") as config_file:
+    config = json.load(config_file)
+
+mqtt_broker_ip = config["mqtt_broker"]["ip"]
+mqtt_broker_port = config["mqtt_broker"]["port"]
+mqtt_socket_broker_ip = config["mqtt_socket_broker"]["ip"]
+mqtt_socket_broker_port = config["mqtt_socket_broker"]["port"]
+
+
 client1 = mqtt.Client()
 client2 = mqtt.Client(transport="websockets")
 
@@ -14,7 +23,7 @@ gamepad_data = None
 
 def on_connect(client1, userdata, flags, rc):
     print("연결 성공, 결과 코드: " + str(rc))
-    # 게임패드 데이터를 topic 구독
+    # 게임패드 데이터 topic 구독
     client1.subscribe("jetson/pad")
 
 def on_connect_socket(client2, userdata, flags, rc):
@@ -37,7 +46,7 @@ def on_message(client1, userdata, msg):
         print(f"JSON decode error: {e}")
 
 def Arm_Handle():
-    client1.connect("129.254.174.120", 1883, 60)
+    client1.connect(mqtt_broker_ip, mqtt_broker_port, 60)
     client1.on_connect = on_connect
     
     if not client1.is_connected:
@@ -48,14 +57,14 @@ def Arm_Handle():
     client1.loop_start()
 
 def Camera_Handle():
-    client2.connect("129.254.174.120", 9002, 60)
+    client2.connect(mqtt_socket_broker_ip, mqtt_socket_broker_port, 60)
     client2.on_connect = on_connect_socket
     if not client2.is_connected:
         try_reconnect_socket(client2)
     else:
         camera(client2)
         
-    client2.loop_start()  # loop_forever()
+    client2.loop_start()
 
 def camera(client2):
     image = cv2.VideoCapture(0)
@@ -63,27 +72,20 @@ def camera(client2):
     image.set(cv2.CAP_PROP_FRAME_HEIGHT, 240)
     try:
         while True:
-            start = time.time()
+            ######### Servo 데이터 발행 #########
             arm_data = []
-
             for i in range(6):
                 aa = Arm.Arm_serial_servo_read(i+1)
                 arm_data.append({i+1: str(aa)})
-
             client2.publish("jetson/read", json.dumps(arm_data))
+            ######### Servo 데이터 발행 #########
 
             ret, frame = image.read()
             if ret:
                 _, buffer = cv2.imencode('.jpg', frame)
                 jpg_base64 = base64.b64encode(buffer).decode()
                 client2.publish("jetson/camera", jpg_base64, qos=0)
-                end = time.time()
-                t = end - start
-                fps = 1/t
-                print("stream fps: ", end ="")
-                print(fps)
 
-                
     except KeyboardInterrupt:
         print("카메라 처리 종료")
         image.release()
@@ -255,14 +257,11 @@ def arm():
             except KeyError as e:
                 print(f"KeyError: {e}")
 
-        # 임의의 시간 간격으로 반복 수행
-        # time.sleep(0.05)
-
 def try_reconnect(client):
     while not client.is_connected():
         try:
             print("Trying to mqtt socket reconnect...")
-            client.connect("129.254.174.120", 1883, 60)
+            client.connect(mqtt_broker_ip, mqtt_broker_port, 60)
             time.sleep(3)
         except ConnectionError:
             print("Failed to reconnect. Retrying in 3 seconds...")
@@ -272,7 +271,7 @@ def try_reconnect_socket(client):
     while not client.is_connected():
         try:
             print("Trying to mqtt reconnect...")
-            client.connect("129.254.174.120", 9002, 60)
+            client.connect(mqtt_socket_broker_ip, mqtt_socket_broker_port, 60)
             time.sleep(3)
         except ConnectionError:
             print("Failed to reconnect. Retrying in 3 seconds...")
